@@ -24,8 +24,8 @@ public class ConnectedClient implements Runnable {
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             String first = in.readLine();
-            if (first != null && first.startsWith("LOGIN:")) {
-                username = first.substring(6).trim();
+            if (first != null && MessageParser.getType(first) == MessageType.LOGIN_REQUEST) {
+                username = MessageParser.getPayload(first).trim();
                 gameService.register(username, this);
             }
 
@@ -44,22 +44,24 @@ public class ConnectedClient implements Runnable {
     }
 
     private void handle(String msg) {
-        if (msg.startsWith("INVITE:")) {
-            String target = msg.substring(7);
-            gameService.handleInvite(username, target);
-        } else if (msg.startsWith("INVITE_RESPONSE:")) {
-            // INVITE_RESPONSE:inviterUsername:true|false
-            String[] parts = msg.split(":", 3);
-            if (parts.length == 3) {
-                boolean accepted = Boolean.parseBoolean(parts[2]);
-                gameService.handleInviteResponse(username, parts[1], accepted);
-            }
-        } else if (msg.startsWith("MOVE:")) {
-            int col = Integer.parseInt(msg.substring(5));
-            gameService.handleMove(username, col);
-        } else if (msg.startsWith("PLAY_AGAIN:")) {
-            boolean want = Boolean.parseBoolean(msg.substring(11));
-            gameService.handlePlayAgain(username, want);
+        MessageType type = MessageParser.getType(msg);
+        String[] args = MessageParser.getArgs(msg);
+
+        switch (type) {
+            case INVITE_REQUEST:
+                gameService.handleInvite(username, args[0]);
+                break;
+            case INVITE_RESPONSE:
+                gameService.handleInviteResponse(username, args[0], Boolean.parseBoolean(args[1]));
+                break;
+            case MOVE_REQUEST:
+                gameService.handleMove(username, Integer.parseInt(args[0]));
+                break;
+            case PLAY_AGAIN_REQUEST:
+                gameService.handlePlayAgain(username, Boolean.parseBoolean(args[0]));
+                break;
+            default:
+                break;
         }
     }
 
