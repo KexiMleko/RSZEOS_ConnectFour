@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class GameService {
     private final SessionRegistry sessionRegistry = new SessionRegistry();
+    private final UserRegistry userRegistry = new UserRegistry();
     private final Map<String, GameMatch> matches = new ConcurrentHashMap<>();
 
     public void register(String username, ConnectedClient client) {
@@ -12,12 +13,15 @@ public class GameService {
             sessionRegistry.get(username).disconnect();
         }
         sessionRegistry.add(username, client);
+        userRegistry.addUser(username);
         String msg = MessageParser.build(MessageType.LOGIN_RESPONSE);
         notify(client, msg);
+        broadcastAvailablePlayers(username);
     }
 
     public void logout(String username, ConnectedClient self) {
         sessionRegistry.removeIfSame(username, self);
+        userRegistry.removeUser(username);
     }
 
     public void handleInvite(String from, String target) {
@@ -49,18 +53,24 @@ public class GameService {
         notify(sessionRegistry.get(match.player2), msg);
     }
 
-    public void handlePlayAgainResponse(String from, String inviter, boolean accepted) {
+    public void handlePlayAgainResponse(String from, String inviter, String prev_player1, boolean accepted) {
 
         if (accepted) {
-            startMatch(inviter, from);
+            if (prev_player1 == from) {
+                startMatch(inviter, from);
+            } else {
+                startMatch(from, inviter);
+            }
         }
         ConnectedClient client = sessionRegistry.get(inviter);
         String msg = MessageParser.build(MessageType.INVITE_RESULT, Boolean.toString(accepted));
         notify(client, msg);
     }
 
-    public void handlePlayAgain(String from, String prev_player1, String prev_player2) {
-
+    public void handlePlayAgain(String from, String target) {
+        ConnectedClient client = sessionRegistry.get(target);
+        String msg = MessageParser.build(MessageType.INVITE_NOTIFICATION, from);
+        notify(client, msg);
     }
 
     private void startMatch(String player1, String player2) {
@@ -72,6 +82,13 @@ public class GameService {
     private void endMatch(String player1, String player2) {
         matches.remove(player1);
         matches.remove(player2);
+        broadcastAvailablePlayers(player1);
+        broadcastAvailablePlayers(player2);
+    }
+
+    private void broadcastAvailablePlayers(String to) {
+        ConnectedClient client = sessionRegistry.get(to);
+        client.send(MessageParser.build(MessageType.PLAYERS_LIST, userRegistry.all().toString()));
     }
 
     private void notify(ConnectedClient client, String msg) {
