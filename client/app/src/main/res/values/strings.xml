@@ -34,4 +34,8 @@
     <string name="result_you_won">You won!</string>
     <string name="result_you_lost">%1$s won</string>
     <string name="result_draw">It\'s a draw</string>
+    <string name="play_again">Play again</string>
+    <string name="status_waiting_rematch">Waiting for %1$s to accept…</string>
+    <string name="rematch_title">Rematch</string>
+    <string name="rematch_message">%1$s wants a rematch. Accept?</string>
 </resources>

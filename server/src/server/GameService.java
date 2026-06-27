@@ -62,7 +62,7 @@ public class GameService {
     public void handlePlayAgainResponse(String from, String inviter, String prev_player1, boolean accepted) {
 
         if (accepted) {
-            if (prev_player1 == from) {
+            if (prev_player1.equals(from)) {
                 startMatch(inviter, from);
             } else {
                 startMatch(from, inviter);

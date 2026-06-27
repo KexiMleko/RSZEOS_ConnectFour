@@ -2,6 +2,8 @@ package com.example.connectfour;
 
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.View;
+import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -37,6 +39,7 @@ public class GameActivity extends AppCompatActivity implements NetworkClient.Lis
     private GridLayout boardGrid;
     private TextView tvTurn;
     private TextView tvStatus;
+    private Button btnPlayAgain;
 
     private String username;
     private String opponent;
@@ -65,13 +68,19 @@ public class GameActivity extends AppCompatActivity implements NetworkClient.Lis
         boardGrid = findViewById(R.id.boardGrid);
         tvTurn = findViewById(R.id.tvTurn);
         tvStatus = findViewById(R.id.tvStatus);
+        btnPlayAgain = findViewById(R.id.btnPlayAgain);
+        btnPlayAgain.setOnClickListener(v -> onPlayAgainClicked());
 
         buildBoard();
         resetBoard();
 
+        updateHeader();
+        updateStatus();
+    }
+
+    private void updateHeader() {
         String myColor = getString(playsFirst ? R.string.color_red : R.string.color_blue);
         tvTurn.setText(getString(R.string.game_header, myColor, opponent));
-        updateStatus();
     }
 
     @Override
@@ -129,6 +138,12 @@ public class GameActivity extends AppCompatActivity implements NetworkClient.Lis
             case MessageProtocol.GAME_OVER:
                 onGameOver(MessageProtocol.getPayload(line));
                 break;
+            case MessageProtocol.INVITE_NOTIFICATION:
+                onRematchRequest(MessageProtocol.getPayload(line));
+                break;
+            case MessageProtocol.INVITE_RESULT:
+                onRematchResult(Boolean.parseBoolean(MessageProtocol.getPayload(line)));
+                break;
             default:
                 break;
         }
@@ -161,11 +176,57 @@ public class GameActivity extends AppCompatActivity implements NetworkClient.Lis
             message = getString(R.string.result_you_lost, winner);
         }
         tvStatus.setText(message);
+        btnPlayAgain.setVisibility(View.VISIBLE);
         new AlertDialog.Builder(this)
                 .setTitle(R.string.game_over_title)
                 .setMessage(message)
                 .setPositiveButton(android.R.string.ok, null)
                 .show();
+    }
+
+    private void onPlayAgainClicked() {
+        btnPlayAgain.setEnabled(false);
+        net.send(MessageProtocol.build(MessageProtocol.PLAY_AGAIN_REQUEST, opponent));
+        tvStatus.setText(getString(R.string.status_waiting_rematch, opponent));
+    }
+
+    private void onRematchRequest(String from) {
+        String prevPlayer1 = playsFirst ? username : opponent;
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.rematch_title)
+                .setMessage(getString(R.string.rematch_message, from))
+                .setCancelable(false)
+                .setPositiveButton(R.string.accept, (dialog, which) -> {
+                    net.send(MessageProtocol.build(
+                            MessageProtocol.PLAY_AGAIN_RESPONSE, from, prevPlayer1, "true"));
+                    restartGame();
+                })
+                .setNegativeButton(R.string.decline, (dialog, which) -> {
+                    net.send(MessageProtocol.build(
+                            MessageProtocol.PLAY_AGAIN_RESPONSE, from, prevPlayer1, "false"));
+                    finish();
+                })
+                .show();
+    }
+
+    private void onRematchResult(boolean accepted) {
+        if (accepted) {
+            restartGame();
+        } else {
+            finish();
+        }
+    }
+
+    private void restartGame() {
+        playsFirst = !playsFirst;
+        myDisc = playsFirst ? RED : BLUE;
+        myTurn = playsFirst;
+        gameOver = false;
+        resetBoard();
+        btnPlayAgain.setVisibility(View.GONE);
+        btnPlayAgain.setEnabled(true);
+        updateHeader();
+        updateStatus();
     }
 
     private void placeDisc(int row, int col, int disc) {
