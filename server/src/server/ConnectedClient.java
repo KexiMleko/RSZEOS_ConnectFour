@@ -58,7 +58,10 @@ public class ConnectedClient implements Runnable {
                 gameService.handleMove(username, Integer.parseInt(args[0]));
                 break;
             case PLAY_AGAIN_REQUEST:
-                gameService.handlePlayAgain(username, Boolean.parseBoolean(args[0]));
+                gameService.handlePlayAgain(username, args[0], args[1]);
+                break;
+            case PLAY_AGAIN_RESPONSE:
+                gameService.handlePlayAgainResponse(username, args[0], Boolean.parseBoolean(args[1]));
                 break;
             default:
                 break;

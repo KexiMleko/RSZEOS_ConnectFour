@@ -12,6 +12,8 @@ public class GameService {
             sessionRegistry.get(username).disconnect();
         }
         sessionRegistry.add(username, client);
+        String msg = MessageParser.build(MessageType.LOGIN_RESPONSE);
+        notify(client, msg);
     }
 
     public void logout(String username, ConnectedClient self) {
@@ -19,26 +21,46 @@ public class GameService {
     }
 
     public void handleInvite(String from, String target) {
-        sessionRegistry.get(target).send(MessageParser.build(MessageType.INVITE_NOTIFICATION));
+
+        ConnectedClient client = sessionRegistry.get(target);
+        String msg = MessageParser.build(MessageType.INVITE_NOTIFICATION, from);
+        notify(client, msg);
     }
 
     public void handleInviteResponse(String from, String inviter, boolean accepted) {
         if (accepted) {
             startMatch(inviter, from);
         }
-        sessionRegistry.get(inviter).send(MessageParser.build(MessageType.INVITE_RESULT, Boolean.toString(accepted)));
+        ConnectedClient client = sessionRegistry.get(inviter);
+        String msg = MessageParser.build(MessageType.INVITE_RESULT, Boolean.toString(accepted));
+        notify(client, msg);
     }
 
     public void handleMove(String from, int col) {
         GameMatch match = matches.get(from);
         match.dropDisc(col);
         boolean hasWon = match.checkWin();
+        String msg = MessageParser.build(MessageType.MOVE_UPDATE, from);
         if (hasWon) {
             endMatch(match.player1, match.player2);
+            msg = MessageParser.build(MessageType.GAME_OVER, from);
         }
+        notify(sessionRegistry.get(match.player1), msg);
+        notify(sessionRegistry.get(match.player2), msg);
     }
 
-    public void handlePlayAgain(String from, boolean want) {
+    public void handlePlayAgainResponse(String from, String inviter, boolean accepted) {
+
+        if (accepted) {
+            startMatch(inviter, from);
+        }
+        ConnectedClient client = sessionRegistry.get(inviter);
+        String msg = MessageParser.build(MessageType.INVITE_RESULT, Boolean.toString(accepted));
+        notify(client, msg);
+    }
+
+    public void handlePlayAgain(String from, String prev_player1, String prev_player2) {
+
     }
 
     private void startMatch(String player1, String player2) {
