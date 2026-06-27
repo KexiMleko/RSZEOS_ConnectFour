@@ -2,4 +2,9 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="board">#2E3B4E</color>
+    <color name="disc_empty">#ECEFF1</color>
+    <color name="disc_red">#E53935</color>
+    <color name="disc_blue">#1E88E5</color>
 </resources>

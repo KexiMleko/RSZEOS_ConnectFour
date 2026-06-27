@@ -23,5 +23,7 @@
     <string name="accept">Accept</string>
     <string name="decline">Decline</string>
 
-    <string name="game_info">Game vs %1$s\nYou are player %2$d</string>
+    <string name="color_red">Red</string>
+    <string name="color_blue">Blue</string>
+    <string name="game_header">You are %1$s  •  vs %2$s</string>
 </resources>

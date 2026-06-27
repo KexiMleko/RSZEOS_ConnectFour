@@ -3,15 +3,23 @@
     android:id="@+id/game"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
+    android:gravity="center_horizontal"
     android:orientation="vertical"
     android:padding="16dp">
 
     <TextView
-        android:id="@+id/tvGameInfo"
+        android:id="@+id/tvTurn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:textSize="18sp" />
+        android:layout_marginBottom="24dp"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <GridLayout
+        android:id="@+id/boardGrid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/board"
+        android:padding="6dp" />
 
 </LinearLayout>
