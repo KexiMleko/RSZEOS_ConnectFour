@@ -26,4 +26,8 @@
     <string name="color_red">Red</string>
     <string name="color_blue">Blue</string>
     <string name="game_header">You are %1$s  •  vs %2$s</string>
+    <string name="status_your_turn">Your turn</string>
+    <string name="status_their_turn">Waiting for %1$s…</string>
+    <string name="warn_not_your_turn">Wait for your opponent to play</string>
+    <string name="warn_column_full">That column is full</string>
 </resources>
