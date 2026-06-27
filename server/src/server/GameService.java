@@ -44,7 +44,7 @@ public class GameService {
         GameMatch match = matches.get(from);
         match.dropDisc(col);
         boolean hasWon = match.checkWin();
-        String msg = MessageParser.build(MessageType.MOVE_UPDATE, from);
+        String msg = MessageParser.build(MessageType.MOVE_UPDATE, from, Integer.toString(col));
         if (hasWon) {
             endMatch(match.player1, match.player2);
             msg = MessageParser.build(MessageType.GAME_OVER, from);
