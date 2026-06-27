@@ -8,6 +8,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -16,7 +17,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.connectfour.net.MessageProtocol;
 import com.example.connectfour.net.NetworkClient;
 
-public class GameActivity extends AppCompatActivity {
+public class GameActivity extends AppCompatActivity implements NetworkClient.Listener {
 
     public static final String EXTRA_USERNAME = "username";
     public static final String EXTRA_OPPONENT = "opponent";
@@ -37,10 +38,12 @@ public class GameActivity extends AppCompatActivity {
     private TextView tvTurn;
     private TextView tvStatus;
 
+    private String username;
     private String opponent;
     private boolean playsFirst;
     private int myDisc;
     private boolean myTurn;
+    private boolean gameOver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +56,7 @@ public class GameActivity extends AppCompatActivity {
             return insets;
         });
 
+        username = getIntent().getStringExtra(EXTRA_USERNAME);
         opponent = getIntent().getStringExtra(EXTRA_OPPONENT);
         playsFirst = getIntent().getBooleanExtra(EXTRA_PLAYS_FIRST, false);
         myDisc = playsFirst ? RED : BLUE;
@@ -70,7 +74,16 @@ public class GameActivity extends AppCompatActivity {
         updateStatus();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        net.setListener(this);
+    }
+
     private void onColumnTapped(int col) {
+        if (gameOver) {
+            return;
+        }
         if (!myTurn) {
             Toast.makeText(this, R.string.warn_not_your_turn, Toast.LENGTH_SHORT).show();
             return;
@@ -87,6 +100,72 @@ public class GameActivity extends AppCompatActivity {
 
         myTurn = false;
         updateStatus();
+    }
+
+    @Override
+    public void onConnected() {
+    }
+
+    @Override
+    public void onMessage(String line) {
+        runOnUiThread(() -> handle(line));
+    }
+
+    @Override
+    public void onDisconnected() {
+        runOnUiThread(() -> tvStatus.setText(R.string.status_disconnected));
+    }
+
+    @Override
+    public void onError(Exception e) {
+        runOnUiThread(() -> tvStatus.setText(getString(R.string.status_error, e.getMessage())));
+    }
+
+    private void handle(String line) {
+        switch (MessageProtocol.getType(line)) {
+            case MessageProtocol.MOVE_UPDATE:
+                onMoveUpdate(MessageProtocol.getArgs(line));
+                break;
+            case MessageProtocol.GAME_OVER:
+                onGameOver(MessageProtocol.getPayload(line));
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void onMoveUpdate(String[] args) {
+        String mover = args[0];
+        if (mover.equals(username)) {
+            return;
+        }
+        int col = Integer.parseInt(args[1]);
+        int row = dropRow(col);
+        if (row == -1) {
+            return;
+        }
+        int opponentDisc = myDisc == RED ? BLUE : RED;
+        placeDisc(row, col, opponentDisc);
+        myTurn = true;
+        updateStatus();
+    }
+
+    private void onGameOver(String winner) {
+        gameOver = true;
+        String message;
+        if (winner.isEmpty()) {
+            message = getString(R.string.result_draw);
+        } else if (winner.equals(username)) {
+            message = getString(R.string.result_you_won);
+        } else {
+            message = getString(R.string.result_you_lost, winner);
+        }
+        tvStatus.setText(message);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.game_over_title)
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
     }
 
     private void placeDisc(int row, int col, int disc) {
