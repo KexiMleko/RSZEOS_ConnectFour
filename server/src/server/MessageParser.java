@@ -21,8 +21,9 @@ public class MessageParser {
         return getPayload(msg).split(":", -1);
     }
 
-    public static String build(String type, String... args) {
-        if (args.length == 0) return type;
+    public static String build(MessageType type, String... args) {
+        if (args.length == 0)
+            return type.toString();
         return type + ":" + String.join(":", args);
     }
 }
