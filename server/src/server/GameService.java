@@ -44,13 +44,19 @@ public class GameService {
         GameMatch match = matches.get(from);
         match.dropDisc(col);
         boolean hasWon = match.checkWin();
-        String msg = MessageParser.build(MessageType.MOVE_UPDATE, from, Integer.toString(col));
+        boolean isDraw = !hasWon && match.isBoardFull();
+
+        notifyBoth(match, MessageParser.build(MessageType.MOVE_UPDATE, from, Integer.toString(col)));
+
         if (hasWon) {
+            notifyBoth(match, MessageParser.build(MessageType.GAME_OVER, from));
             endMatch(match.player1, match.player2);
-            msg = MessageParser.build(MessageType.GAME_OVER, from);
+        } else if (isDraw) {
+            notifyBoth(match, MessageParser.build(MessageType.GAME_OVER, ""));
+            endMatch(match.player1, match.player2);
+        } else {
+            match.switchTurn();
         }
-        notify(sessionRegistry.get(match.player1), msg);
-        notify(sessionRegistry.get(match.player2), msg);
     }
 
     public void handlePlayAgainResponse(String from, String inviter, String prev_player1, boolean accepted) {
@@ -89,6 +95,11 @@ public class GameService {
     private void broadcastAvailablePlayers(String to) {
         ConnectedClient client = sessionRegistry.get(to);
         client.send(MessageParser.build(MessageType.PLAYERS_LIST, userRegistry.all().toString()));
+    }
+
+    private void notifyBoth(GameMatch match, String msg) {
+        notify(sessionRegistry.get(match.player1), msg);
+        notify(sessionRegistry.get(match.player2), msg);
     }
 
     private void notify(ConnectedClient client, String msg) {
