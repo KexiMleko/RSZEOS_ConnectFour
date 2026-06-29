@@ -1,5 +1,6 @@
 package server;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,12 +17,13 @@ public class GameService {
         userRegistry.addUser(username);
         String msg = MessageParser.build(MessageType.LOGIN_RESPONSE);
         notify(client, msg);
-        broadcastAvailablePlayers(username);
+        broadcastAvailablePlayers();
     }
 
     public void logout(String username, ConnectedClient self) {
         sessionRegistry.removeIfSame(username, self);
         userRegistry.removeUser(username);
+        broadcastAvailablePlayers();
     }
 
     public void handleInvite(String from, String target) {
@@ -83,18 +85,25 @@ public class GameService {
         GameMatch match = new GameMatch(player1, player2);
         matches.put(player1, match);
         matches.put(player2, match);
+        userRegistry.removeUser(player1);
+        userRegistry.removeUser(player2);
+        broadcastAvailablePlayers();
     }
 
     private void endMatch(String player1, String player2) {
         matches.remove(player1);
         matches.remove(player2);
-        broadcastAvailablePlayers(player1);
-        broadcastAvailablePlayers(player2);
+        userRegistry.addUser(player1);
+        userRegistry.addUser(player2);
+        broadcastAvailablePlayers();
     }
 
-    private void broadcastAvailablePlayers(String to) {
-        ConnectedClient client = sessionRegistry.get(to);
-        client.send(MessageParser.build(MessageType.PLAYERS_LIST, userRegistry.all().toString()));
+    private void broadcastAvailablePlayers() {
+        Collection<String> available = userRegistry.all();
+        String msg = MessageParser.build(MessageType.PLAYERS_LIST, available.toString());
+        for (String user : available) {
+            notify(sessionRegistry.get(user), msg);
+        }
     }
 
     private void notifyBoth(GameMatch match, String msg) {
