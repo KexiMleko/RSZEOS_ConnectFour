@@ -40,6 +40,7 @@ public class GameActivity extends AppCompatActivity implements NetworkClient.Lis
     private TextView tvTurn;
     private TextView tvStatus;
     private Button btnPlayAgain;
+    private Button btnBrowsePlayers;
 
     private String username;
     private String opponent;
@@ -70,6 +71,8 @@ public class GameActivity extends AppCompatActivity implements NetworkClient.Lis
         tvStatus = findViewById(R.id.tvStatus);
         btnPlayAgain = findViewById(R.id.btnPlayAgain);
         btnPlayAgain.setOnClickListener(v -> onPlayAgainClicked());
+        btnBrowsePlayers = findViewById(R.id.btnBrowsePlayers);
+        btnBrowsePlayers.setOnClickListener(v -> finish());
 
         buildBoard();
         resetBoard();
@@ -177,6 +180,7 @@ public class GameActivity extends AppCompatActivity implements NetworkClient.Lis
         }
         tvStatus.setText(message);
         btnPlayAgain.setVisibility(View.VISIBLE);
+        btnBrowsePlayers.setVisibility(View.VISIBLE);
         new AlertDialog.Builder(this)
                 .setTitle(R.string.game_over_title)
                 .setMessage(message)
@@ -225,6 +229,7 @@ public class GameActivity extends AppCompatActivity implements NetworkClient.Lis
         resetBoard();
         btnPlayAgain.setVisibility(View.GONE);
         btnPlayAgain.setEnabled(true);
+        btnBrowsePlayers.setVisibility(View.GONE);
         updateHeader();
         updateStatus();
     }
