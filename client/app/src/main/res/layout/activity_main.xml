@@ -42,18 +42,4 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp" />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/label_players"
-        android:textStyle="bold" />
-
-    <ListView
-        android:id="@+id/lvPlayers"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="8dp" />
-
 </LinearLayout>

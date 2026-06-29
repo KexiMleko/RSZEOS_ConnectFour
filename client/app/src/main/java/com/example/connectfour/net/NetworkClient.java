@@ -31,6 +31,7 @@ public class NetworkClient {
     private ExecutorService sender;
     private volatile Listener listener;
     private volatile boolean running;
+    private volatile String lastPlayersList;
 
     private NetworkClient() {
     }
@@ -41,6 +42,10 @@ public class NetworkClient {
 
     public void setListener(Listener listener) {
         this.listener = listener;
+        String cached = lastPlayersList;
+        if (listener != null && cached != null) {
+            listener.onMessage(cached);
+        }
     }
 
     public boolean isConnected() {
@@ -116,6 +121,9 @@ public class NetworkClient {
     }
 
     private void emitMessage(String msg) {
+        if (MessageProtocol.PLAYERS_LIST.equals(MessageProtocol.getType(msg))) {
+            lastPlayersList = msg;
+        }
         Listener l = listener;
         if (l != null) {
             l.onMessage(msg);
